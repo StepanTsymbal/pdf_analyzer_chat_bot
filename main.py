@@ -1,25 +1,32 @@
+from langchain_openai import OpenAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
+
 import utils.pdf_service as pdf_service
 import pine_cone.pinecone_service as pinecone_service
+import chats.chat_service as chat_service
 
 
-index_name = "python-index-copy"
+index_name = "python-index--test-2"
 
 file_path = "drylab.pdf"
 
 texts = pdf_service.process_pdf(file_path)
-embeddings = pinecone_service.create_embeddings(texts)
-ids = pinecone_service.get_ids(file_path, embeddings)
+# embeddings = pinecone_service.create_embeddings(texts)
+documents = pinecone_service.create_pinecone_documents(texts)
 
 index = pinecone_service.create_index(index_name)
-pinecone_service.upsert_embeddings(index, embeddings, ids)
+# pinecone_service.upsert_embeddings(index, embeddings)
 
-# def print_hi(name):
-#     # Use a breakpoint in the code line below to debug your script.
-#     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-#
-#
-# # Press the green button in the gutter to run the script.
-# if __name__ == '__main__':
-#     print_hi('PyCharm')
-#
-# # See PyCharm help at https://www.jetbrains.com/help/pycharm/
+vector_store = pinecone_service.vector_store_init(index=index)
+# pinecone_service.upsert_documents(vector_store, documents)
+
+# query = "helped anonymize names in the process"
+# response = vector_store.similarity_search(query)
+# print(response)
+
+qa = chat_service.get_qa(vector_store)
+
+query = 'list New owners'
+print(qa.invoke(query)['result'])
+query = 'count them and show as table'
+print(qa.invoke(query)['result'])
