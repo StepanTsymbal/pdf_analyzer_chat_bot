@@ -1,6 +1,3 @@
-from langchain_openai import OpenAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
-
 import utils.pdf_service as pdf_service
 import pine_cone.pinecone_service as pinecone_service
 import chats.chat_service as chat_service
