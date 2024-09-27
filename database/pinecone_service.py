@@ -44,7 +44,8 @@ def create_pinecone_documents(texts):
 
 def upsert_documents(vector_store, documents):
     uuids = [str(uuid4()) for i in range(len(documents))]
-    vector_store.add_documents(documents=documents, ids=uuids)
+    res = vector_store.add_documents(documents=documents, ids=uuids)
+    # print('res:', res)
 
 
 def vector_store_init(index, model=MODEL):
