@@ -29,3 +29,7 @@ def init_qa(id):
     qa = chat_service.get_qa_2(vector_store)
 
     return qa
+
+
+def save_chat_message_to_db(text, is_question, document_id, session_id):
+    postgresql_service.insert_chat_history_row(text, is_question, document_id, session_id)
