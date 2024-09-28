@@ -89,10 +89,3 @@ def get_document_by_id(id):
 
     return cursor.fetchone()
 
-
-# create_documents_table()
-# insert_row('asdasd', 'name_test_3')
-# print(get_all_documents())
-
-# create_chat_history_table()
-# insert_chat_history_row('text_text_1', True, 30, 'asd-asdasd-asd')
