@@ -2,6 +2,7 @@ import psycopg2
 from datetime import datetime
 
 
+# TODO: move to variables
 DB_USER = "postgres"
 DB_PASSWORD = "pass1234"
 DB_NAME = "chat_bot"
@@ -35,6 +36,7 @@ def create_chat_history_table():
     text TEXT NOT NULL,
     is_question BOOL,
     document_id INT NOT NULL,
+    session_id TEXT NOT NULL,
     created_time TIMESTAMP NOT NULL,
     CONSTRAINT fk_document FOREIGN KEY(document_id) REFERENCES documents(id))
     '''
@@ -57,11 +59,11 @@ def insert_documents_row(uuid, name):
     return document_id
 
 
-def insert_chat_history_row(text, is_question, document_id):
+def insert_chat_history_row(text, is_question, document_id, session_id):
     insert_query = """
-        INSERT INTO chat_history (text, is_question, document_id, created_time) 
-        VALUES ('{text}', {is_question}, {document_id}, '{created_time}')
-        """.format(text=text, is_question=is_question, document_id=document_id, created_time=datetime.now())
+        INSERT INTO chat_history (text, is_question, document_id, session_id, created_time) 
+        VALUES ('{text}', {is_question}, {document_id}, '{session_id}', '{created_time}')
+        """.format(text=text, is_question=is_question, document_id=document_id, session_id=session_id, created_time=datetime.now())
 
     cursor.execute(insert_query)
     connection.commit()
@@ -93,4 +95,4 @@ def get_document_by_id(id):
 # print(get_all_documents())
 
 # create_chat_history_table()
-# insert_chat_history_row('text_text_1', True, 16)
+# insert_chat_history_row('text_text_1', True, 30, 'asd-asdasd-asd')
