@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.font as tkFont
 from pathlib import Path
 from tkinter import filedialog
 from uuid import uuid4
@@ -19,13 +20,13 @@ class ChatApp:
         self.root = root
         self.root.title("Chat with PDF")
 
-        self.chat_label = tk.Label(self.root, text="Chat")
+        self.chat_label = tk.Label(self.root, text="Chat", font=tkFont.Font(size=10, weight="bold"))
         self.chat_label.grid(row=0, column=1)
 
         self.chat_display = tk.Text(self.root, state='disabled', width=50, height=30)
         self.chat_display.grid(row=1, column=1, columnspan=1, rowspan=7, padx=5, pady=5)
 
-        self.file_label = tk.Label(self.root, text="Uploaded Files (select any to discuss)")
+        self.file_label = tk.Label(self.root, text="Uploaded Files (select any to discuss)", font=tkFont.Font(size=10, weight="bold"))
         self.file_label.grid(row=0, column=0)
 
         self.file_listbox = tk.Listbox(self.root, width=40, height=15)
@@ -44,13 +45,21 @@ class ChatApp:
         self.message_input = tk.Entry(self.root, width=40)
         self.message_input.grid(row=4, column=0)
 
-        self.send_button = tk.Button(self.root, text="Send", command=self.send_message, state=tk.DISABLED, width=32)
+        self.send_button = tk.Button(self.root, text="Send",
+                                     command=self.send_message,
+                                     state=tk.DISABLED, width=28,
+                                     font=tkFont.Font(size=10, weight="bold"))
         self.send_button.grid(row=5, column=0)
 
-        self.upload_button = tk.Button(self.root, text="Upload PDF", command=self.upload_pdf, width=32)
+        self.upload_button = tk.Button(self.root, text="Upload PDF",
+                                       command=self.upload_pdf, width=28,
+                                       font=tkFont.Font(size=10, weight="bold"))
         self.upload_button.grid(row=6, column=0)
 
-        self.reset_button = tk.Button(self.root, text="Reset Chat/Context", command=self.reset_session, width=30, fg='white', bg='red', font=('Courier New', 10, 'bold'))
+        self.reset_button = tk.Button(self.root, text="Reset Chat/Context",
+                                      command=self.reset_session,
+                                      width=25, fg='white', bg='red',
+                                      font=tkFont.Font(size=11, weight="bold"))
         self.reset_button.grid(row=7, column=0)
 
         self.files = {}
