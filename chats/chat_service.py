@@ -1,4 +1,6 @@
 from templates.templates import generic_template_with_history as template
+from templates.templates import contextualize_q_system_prompt as contextualize_q_system_prompt
+from templates.templates import qa_system_prompt as qa_system_prompt
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
@@ -75,10 +77,10 @@ def get_qa_2(vector_store):
     retriever = vector_store.as_retriever()
 
     ### Contextualize question ###
-    contextualize_q_system_prompt = """Given a chat history and the latest user question \
-    which might reference context in the chat history, formulate a standalone question \
-    which can be understood without the chat history. Do NOT answer the question, \
-    just reformulate it if needed and otherwise return it as is."""
+    # contextualize_q_system_prompt = """Given a chat history and the latest user question \
+    # which might reference context in the chat history, formulate a standalone question \
+    # which can be understood without the chat history. Do NOT answer the question, \
+    # just reformulate it if needed and otherwise return it as is."""
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
@@ -91,12 +93,12 @@ def get_qa_2(vector_store):
     )
 
     ### Answer question ###
-    qa_system_prompt = """You are an assistant for question-answering tasks. \
-    Use the following pieces of retrieved context to answer the question. \
-    If you don't know the answer, just say that you don't know. \
-    Use three sentences maximum and keep the answer concise.\
-
-    {context}"""
+    # qa_system_prompt = """You are an assistant for question-answering tasks. \
+    # Use the following pieces of retrieved context to answer the question. \
+    # If you don't know the answer, just say that you don't know. \
+    # Use three sentences maximum and keep the answer concise.\
+    #
+    # {context}"""
     qa_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", qa_system_prompt),
@@ -108,8 +110,8 @@ def get_qa_2(vector_store):
 
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
-    ### Statefully manage chat history ###
-    store = {}
+    # Statefully manage chat history ###
+    # store = {}
 
     conversational_rag_chain = RunnableWithMessageHistory(
         rag_chain,
