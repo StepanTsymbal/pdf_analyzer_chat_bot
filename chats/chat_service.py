@@ -10,8 +10,8 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.runnables import ConfigurableFieldSpec
 
 
-def get_qa_2(vector_store):
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+def get_qa(vector_store, model="gpt-3.5-turbo"):
+    llm = ChatOpenAI(model=model, temperature=0)
     retriever = vector_store.as_retriever()
 
     # Contextualize question #

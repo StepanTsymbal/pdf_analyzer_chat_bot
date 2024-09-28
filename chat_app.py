@@ -50,7 +50,7 @@ class ChatApp:
         self.upload_button = tk.Button(self.root, text="Upload PDF", command=self.upload_pdf, width=32)
         self.upload_button.grid(row=6, column=0)
 
-        self.reset_button = tk.Button(self.root, text="Reset Chat/Context", command=self.reset_session, width=32)
+        self.reset_button = tk.Button(self.root, text="Reset Chat/Context", command=self.reset_session, width=30, fg='white', bg='red', font=('Courier New', 10, 'bold'))
         self.reset_button.grid(row=7, column=0)
 
         self.files = {}
@@ -73,7 +73,6 @@ class ChatApp:
         if not message:
             message = self.message_input.get()
         if message:
-            # TODO: add save to DBs
             self.chat_display.config(state='normal')
             self.chat_display.insert(tk.END, f"You: {message}\n")
             self.chat_display.config(state='disabled')
@@ -81,7 +80,6 @@ class ChatApp:
 
             chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
 
-            # TODO: add save to DBs
             response = qa.invoke(
                 {"input": message},
                 config={

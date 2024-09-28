@@ -22,48 +22,11 @@ document_id = 29
 index = pinecone_service.create_index(index_name)
 
 vector_store = pinecone_service.vector_store_init(index=index)
-# pinecone_service.upsert_documents(vector_store, documents)
 
 # time.sleep(5)
 
-# query = "helped anonymize names in the process"
-# response = vector_store.similarity_search(query)
-# print(response)
-
-# qa = chat_service.get_qa(vector_store)
-
-# postgresql_service.create_chat_history_table()
-
-# query = 'count these people'
-# postgresql_service.insert_chat_history_row(query, True, document_id)
-# response = qa.invoke(query)
-# print(response)
-# postgresql_service.insert_chat_history_row(response['result'], False, document_id)
-# print(response)
-
-# query = 'list new owners'
-# postgresql_service.insert_chat_history_row(query, True, document_id)
-# response = qa.invoke(query)
-# postgresql_service.insert_chat_history_row(response['result'], False, document_id)
-# print(response)
-
-# query = 'count these people'
-# postgresql_service.insert_chat_history_row(query, True, document_id)
-# response = qa.invoke(query)
-# postgresql_service.insert_chat_history_row(response['result'], False, document_id)
-# print(response)
-
-
-# qa_old = chat_service.get_qa_old(vector_store)
-# response = qa_old.invoke({"question": "count these people"})
-# print(f"{response['chat_history']}\n")
-# response = qa_old.invoke({"question": "list new owners"})
-# print(f"{response['chat_history']}\n")
-# response = qa_old.invoke({"question": "count these people"})
-# print(f"{response['chat_history']}\n")
-
 store = {}
-qa_2 = chat_service.get_qa_2(vector_store)
+qa_2 = chat_service.get_qa(vector_store)
 response = qa_2.invoke(
     {"input": "count these people"},
     config={

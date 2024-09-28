@@ -25,8 +25,7 @@ def init_qa(id):
     index = pinecone_service.create_index(index_name)
     vector_store = pinecone_service.vector_store_init(index=index)
 
-    # global qa
-    qa = chat_service.get_qa_2(vector_store)
+    qa = chat_service.get_qa(vector_store)
 
     return qa
 
