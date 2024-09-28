@@ -8,9 +8,12 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.runnables import ConfigurableFieldSpec
+import logging
+
+MODEL = "gpt-3.5-turbo"
 
 
-def get_qa(vector_store, model="gpt-3.5-turbo"):
+def get_qa(vector_store, model=MODEL):
     llm = ChatOpenAI(model=model, temperature=0)
     retriever = vector_store.as_retriever()
 
@@ -57,6 +60,8 @@ def get_qa(vector_store, model="gpt-3.5-turbo"):
             )
         ]
     )
+
+    logging.info('chat_service:: conversational_rag_chain initialized')
 
     return conversational_rag_chain
 
