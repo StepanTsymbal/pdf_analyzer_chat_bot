@@ -11,6 +11,7 @@ import helpers.chat_app_helper as chat_app_helper
 qa = None
 store = {}
 session_id = uuid4()
+selected_doc_id: int
 
 
 class ChatApp:
@@ -78,6 +79,8 @@ class ChatApp:
             self.chat_display.config(state='disabled')
             self.message_input.delete(0, tk.END)
 
+            chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
+
             # TODO: add save to DBs
             response = qa.invoke(
                 {"input": message},
@@ -85,6 +88,8 @@ class ChatApp:
                     "configurable": {"session_id": session_id, "store": store}
                 },
             )['answer']
+
+            chat_app_helper.save_chat_message_to_db(response, True, selected_doc_id, session_id)
 
             self.chat_display.config(state='normal')
             self.chat_display.insert(tk.END, f"\t\t\tBot: {response}\n")
@@ -118,8 +123,11 @@ class ChatApp:
             self.selected_file.config(text=text, fg="green")
             self.send_button['state'] = tk.NORMAL
 
+            global selected_doc_id
+            selected_doc_id = text.split(": ")[1]
+
             global qa
-            qa = chat_app_helper.init_qa(text.split(": ")[1])
+            qa = chat_app_helper.init_qa(selected_doc_id)
 
 
 if __name__ == "__main__":
