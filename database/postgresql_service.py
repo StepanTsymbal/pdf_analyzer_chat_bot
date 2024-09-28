@@ -48,11 +48,12 @@ def create_chat_history_table():
 def insert_documents_row(uuid, name):
     insert_query = """
         INSERT INTO documents (uuid, name) 
-        VALUES ('{uuid}', '{name}')
+        VALUES (%s, %s)
         returning id
-        """.format(uuid=uuid, name=name)
+        """
 
-    cursor.execute(insert_query)
+    data = (str(uuid), name)
+    cursor.execute(insert_query, data)
     document_id = cursor.fetchone()[0]
     connection.commit()
 
@@ -62,10 +63,11 @@ def insert_documents_row(uuid, name):
 def insert_chat_history_row(text, is_question, document_id, session_id):
     insert_query = """
         INSERT INTO chat_history (text, is_question, document_id, session_id, created_time) 
-        VALUES ('{text}', {is_question}, {document_id}, '{session_id}', '{created_time}')
-        """.format(text=text, is_question=is_question, document_id=document_id, session_id=session_id, created_time=datetime.now())
+        VALUES (%s, %s, %s, %s, %s)
+        """
 
-    cursor.execute(insert_query)
+    data = (text, is_question, document_id, str(session_id), str(datetime.now()))
+    cursor.execute(insert_query, data)
     connection.commit()
 
 
@@ -89,3 +91,10 @@ def get_document_by_id(id):
 
     return cursor.fetchone()
 
+
+# create_documents_table()
+# insert_row('asdasd', 'name_test_3')
+# print(get_all_documents())
+
+# create_chat_history_table()
+# insert_chat_history_row('text_text_1', True, 30, 'asd-asdasd-asd')
