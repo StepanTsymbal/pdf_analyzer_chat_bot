@@ -8,7 +8,7 @@ from uuid import uuid4
 import requests
 
 import utils.pdf_service as pdf_service
-import database.postgresql_service as postgresql_service
+# import database.postgresql_service as postgresql_service
 import helpers.chat_app_helper as chat_app_helper
 import logging_services.seq_service as seq_service
 
@@ -76,9 +76,7 @@ class ChatApp:
             logging.info('ChatApp:: __init__ Complete')
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.error('ChatApp:: __init__ error: {error}', error=ex)
-
-
+            logging.exception('ChatApp:: __init__ error: {error}', error=ex)
 
     def reset_session(self):
         global store
@@ -116,7 +114,7 @@ class ChatApp:
                 self.message_input.delete(0, tk.END)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.error('ChatApp:: send_message error: {error}', error=ex)
+            logging.exception('ChatApp:: send_message error: {error}', error=ex)
 
     def upload_pdf(self):
         try:
@@ -126,11 +124,10 @@ class ChatApp:
                 if pdf_text:
                     with open(file_path, 'rb') as file:
                         files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
-                        response = requests.post(BASE_URL + 'docs/index/', files=files)
+                        response = requests.post(BASE_URL + 'docs/index22/', files=files)
 
                     # print(response)
                     # print(response.status_code)
-
 
                     self.chat_display.config(state='normal')
                     self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
@@ -143,23 +140,23 @@ class ChatApp:
                     logging.info('ChatApp:: {file_name} uploaded', file_name=Path(file_path).name)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.error('ChatApp:: upload_pdf error: {error}', error=ex)
+            logging.exception('ChatApp:: upload_pdf error: {error}', error=ex)
 
     def get_loaded_files(self):
-        try:
-            # documents = postgresql_service.get_all_documents()
-            response = requests.get(BASE_URL + "docs/")
-            # print(response.json())
-            documents = response.json()
-            self.file_listbox.delete(0, tk.END)
-            for document in documents:
-                # self.file_listbox.insert(tk.END, f"File ID: {document[0]}: File Name: {document[2]}")
-                self.file_listbox.insert(tk.END, f"File ID: {document['id']}: File Name: {document['name']}")
+        # try:
+        # documents = postgresql_service.get_all_documents()
+        response = requests.get(BASE_URL + "docs/")
+        # print(response.json())
+        documents = response.json()
+        self.file_listbox.delete(0, tk.END)
+        for document in documents:
+            # self.file_listbox.insert(tk.END, f"File ID: {document[0]}: File Name: {document[2]}")
+            self.file_listbox.insert(tk.END, f"File ID: {document['id']}: File Name: {document['name']}")
 
-            logging.info('ChatApp:: existing files loaded to UI')
-        except Exception as ex:
-            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.error('ChatApp:: get_loaded_files error: {error}', error=ex)
+        logging.info('ChatApp:: existing files loaded to UI')
+        # except Exception as ex:
+        #     messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
+        #     logging.exception('ChatApp:: get_loaded_files error: {error}', error=ex)
 
     def on_file_click(self, event):
         try:
@@ -176,7 +173,7 @@ class ChatApp:
                 qa = chat_app_helper.init_qa(selected_doc_id)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.error('ChatApp:: on_file_click error: {error}', error=ex)
+            logging.exception('ChatApp:: on_file_click error: {error}', error=ex)
 
 
 if __name__ == "__main__":
