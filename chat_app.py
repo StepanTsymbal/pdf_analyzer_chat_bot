@@ -1,9 +1,11 @@
 import logging
+import os
 import tkinter as tk
 from tkinter.font import Font
 from pathlib import Path
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from uuid import uuid4
+import requests
 
 import utils.pdf_service as pdf_service
 import database.postgresql_service as postgresql_service
@@ -15,12 +17,14 @@ store = {}
 session_id = uuid4()
 selected_doc_id: int
 
+BASE_URL = "http://127.0.0.1:8000/"
+
 
 class ChatApp:
     def __init__(self, root):
-        seq_service.seq_logger_init()
-
         try:
+            seq_service.seq_logger_init()
+
             self.root = root
             self.root.title("Chat with PDF")
 
@@ -71,7 +75,7 @@ class ChatApp:
 
             logging.info('ChatApp:: __init__ Complete')
         except Exception as ex:
-            # TODO: add alert
+            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.error('ChatApp:: __init__ error: {error}', error=ex)
 
 
@@ -111,7 +115,7 @@ class ChatApp:
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
         except Exception as ex:
-            # TODO: add alert
+            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.error('ChatApp:: send_message error: {error}', error=ex)
 
     def upload_pdf(self):
@@ -120,29 +124,41 @@ class ChatApp:
             if file_path:
                 pdf_text = pdf_service.process_pdf(file_path)
                 if pdf_text:
+                    with open(file_path, 'rb') as file:
+                        files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
+                        response = requests.post(BASE_URL + 'docs/index/', files=files)
+
+                    # print(response)
+                    # print(response.status_code)
+
+
                     self.chat_display.config(state='normal')
-                    self.chat_display.insert(tk.END, 'PDF content...')
+                    self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
                     self.chat_display.config(state='disabled')
 
-                    chat_app_helper.save_documents_to_dbs(pdf_text, Path(file_path).name)
+                    # chat_app_helper.save_documents_to_dbs(pdf_text, Path(file_path).name)
 
                     self.get_loaded_files()
 
                     logging.info('ChatApp:: {file_name} uploaded', file_name=Path(file_path).name)
         except Exception as ex:
-            # TODO: add alert
+            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.error('ChatApp:: upload_pdf error: {error}', error=ex)
 
     def get_loaded_files(self):
         try:
-            documents = postgresql_service.get_all_documents()
+            # documents = postgresql_service.get_all_documents()
+            response = requests.get(BASE_URL + "docs/")
+            # print(response.json())
+            documents = response.json()
             self.file_listbox.delete(0, tk.END)
             for document in documents:
-                # print(document)
-                self.file_listbox.insert(tk.END, f"File ID: {document[0]}: File Name: {document[2]}")
+                # self.file_listbox.insert(tk.END, f"File ID: {document[0]}: File Name: {document[2]}")
+                self.file_listbox.insert(tk.END, f"File ID: {document['id']}: File Name: {document['name']}")
 
             logging.info('ChatApp:: existing files loaded to UI')
         except Exception as ex:
+            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.error('ChatApp:: get_loaded_files error: {error}', error=ex)
 
     def on_file_click(self, event):
@@ -159,7 +175,7 @@ class ChatApp:
                 global qa
                 qa = chat_app_helper.init_qa(selected_doc_id)
         except Exception as ex:
-            # TODO: add alert
+            messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.error('ChatApp:: on_file_click error: {error}', error=ex)
 
 
