@@ -1,5 +1,5 @@
 # from uuid import uuid4
-from chats import chat_service
+from chats import chat_service_with_session_id
 from database import postgresql_service, pinecone_service
 
 
@@ -24,7 +24,7 @@ def init_qa(id):
     index = pinecone_service.create_index(index_name)
     vector_store = pinecone_service.vector_store_init(index=index)
 
-    qa = chat_service.get_qa(vector_store)
+    qa = chat_service_with_session_id.get_qa_with_session_id(vector_store)
 
     return qa
 

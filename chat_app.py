@@ -10,10 +10,13 @@ import requests
 import utils.pdf_service as pdf_service
 import helpers.chat_app_helper as chat_app_helper
 import logging_services.seq_service as seq_service
+# import helpers.fast_api_helper as fast_api_helper
 
 qa = None
 store = {}
 session_id = uuid4()
+history = []
+chat = {}
 selected_doc_id: int
 
 BASE_URL = "http://127.0.0.1:8000/"
@@ -76,6 +79,7 @@ class ChatApp:
             logging.exception(f'ChatApp:: __init__ error: {ex}')
 
     def reset_session(self):
+        # TODO: add new reset logic
         global store
         store = {}
         global session_id
@@ -94,15 +98,29 @@ class ChatApp:
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
 
+                global chat, history
+                chat["DocId"] = int(selected_doc_id)
+                chat["Question"] = message
+                # global history
+                chat["History"] = history
+
+                # print('CHAT:', chat)
+                # response = requests.post(BASE_URL + 'docs/chat', json=chat)
+                # fast_api_helper.process_question(chat)
+
                 # TODO: move to fast_api?
                 chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
 
+                # TODO: move/duplicate to fast_api?
                 response = qa.invoke(
                     {"input": message},
                     config={
                         "configurable": {"session_id": session_id, "store": store}
                     },
                 )['answer']
+
+                # global history
+                history.append({"Question": message, "Answer": response})
 
                 # TODO: move to fast_api?
                 chat_app_helper.save_chat_message_to_db(response, True, selected_doc_id, session_id)
@@ -123,7 +141,7 @@ class ChatApp:
                 if pdf_text:
                     with open(file_path, 'rb') as file:
                         files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
-                        response = requests.post(BASE_URL + 'docs/index/', files=files)
+                        response = requests.post(BASE_URL + 'docs/index', files=files)
 
                     if response.status_code != 200:
                         raise Exception(
