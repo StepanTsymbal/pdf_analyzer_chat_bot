@@ -13,7 +13,7 @@ import logging
 MODEL = "gpt-3.5-turbo"
 
 
-def get_qa(vector_store, model=MODEL):
+def get_qa_with_session_id(vector_store, model=MODEL):
     llm = ChatOpenAI(model=model, temperature=0)
     retriever = vector_store.as_retriever()
 
