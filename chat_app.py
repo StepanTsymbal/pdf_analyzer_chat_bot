@@ -8,7 +8,6 @@ from uuid import uuid4
 import requests
 
 import utils.pdf_service as pdf_service
-# import database.postgresql_service as postgresql_service
 import helpers.chat_app_helper as chat_app_helper
 import logging_services.seq_service as seq_service
 
@@ -68,15 +67,13 @@ class ChatApp:
 
             self.files = {}
 
-            chat_app_helper.init_postgresql_db()
-
             self.file_listbox.bind("<Double-1>", self.on_file_click)
             self.get_loaded_files()
 
             logging.info('ChatApp:: __init__ Complete')
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.exception('ChatApp:: __init__ error: {error}', error=ex)
+            logging.exception(f'ChatApp:: __init__ error: {ex}')
 
     def reset_session(self):
         global store
@@ -97,6 +94,7 @@ class ChatApp:
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
 
+                # TODO: move to fast_api?
                 chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
 
                 response = qa.invoke(
@@ -106,6 +104,7 @@ class ChatApp:
                     },
                 )['answer']
 
+                # TODO: move to fast_api?
                 chat_app_helper.save_chat_message_to_db(response, True, selected_doc_id, session_id)
 
                 self.chat_display.config(state='normal')
@@ -114,7 +113,7 @@ class ChatApp:
                 self.message_input.delete(0, tk.END)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.exception('ChatApp:: send_message error: {error}', error=ex)
+            logging.exception(f'ChatApp:: send_message error: {ex}')
 
     def upload_pdf(self):
         try:
@@ -124,39 +123,36 @@ class ChatApp:
                 if pdf_text:
                     with open(file_path, 'rb') as file:
                         files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
-                        response = requests.post(BASE_URL + 'docs/index22/', files=files)
+                        response = requests.post(BASE_URL + 'docs/index/', files=files)
 
-                    # print(response)
-                    # print(response.status_code)
+                    if response.status_code != 200:
+                        raise Exception(
+                            f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}'
+                        )
 
                     self.chat_display.config(state='normal')
                     self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
                     self.chat_display.config(state='disabled')
 
-                    # chat_app_helper.save_documents_to_dbs(pdf_text, Path(file_path).name)
-
                     self.get_loaded_files()
 
-                    logging.info('ChatApp:: {file_name} uploaded', file_name=Path(file_path).name)
+                    logging.info(f'ChatApp:: {Path(file_path).name} uploaded')
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.exception('ChatApp:: upload_pdf error: {error}', error=ex)
+            logging.exception(f'ChatApp:: upload_pdf error: {ex}')
 
     def get_loaded_files(self):
-        # try:
-        # documents = postgresql_service.get_all_documents()
         response = requests.get(BASE_URL + "docs/")
-        # print(response.json())
+
+        if response.status_code != 200:
+            raise Exception(f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}')
+
         documents = response.json()
         self.file_listbox.delete(0, tk.END)
         for document in documents:
-            # self.file_listbox.insert(tk.END, f"File ID: {document[0]}: File Name: {document[2]}")
             self.file_listbox.insert(tk.END, f"File ID: {document['id']}: File Name: {document['name']}")
 
         logging.info('ChatApp:: existing files loaded to UI')
-        # except Exception as ex:
-        #     messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-        #     logging.exception('ChatApp:: get_loaded_files error: {error}', error=ex)
 
     def on_file_click(self, event):
         try:
@@ -169,11 +165,12 @@ class ChatApp:
                 global selected_doc_id
                 selected_doc_id = text.split(": ")[1]
 
+                # TODO: move/duplicate to fast_api?
                 global qa
                 qa = chat_app_helper.init_qa(selected_doc_id)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
-            logging.exception('ChatApp:: on_file_click error: {error}', error=ex)
+            logging.exception(f'ChatApp:: on_file_click error: {ex}')
 
 
 if __name__ == "__main__":
