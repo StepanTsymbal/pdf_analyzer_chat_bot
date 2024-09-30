@@ -5,6 +5,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from helpers import fast_api_helper
+from models.chat import Chat
 
 
 @asynccontextmanager
@@ -12,7 +13,7 @@ async def lifespan(app: FastAPI):
     fast_api_helper.init()
     yield
 
-
+# TODO: error handling
 app = FastAPI(lifespan=lifespan)
 limiter = Limiter(key_func=get_remote_address)
 
@@ -31,6 +32,15 @@ async def get_all_docs(request: Request):
 @limiter.limit("30/minute")
 async def index_doc(file: UploadFile, request: Request):
     await fast_api_helper.index_doc(file)
+
+    return 'Ok'
+
+
+@app.post("/docs/chat")
+@limiter.limit("30/minute")
+async def chat(chat: Chat, request: Request):
+    # await fast_api_helper.index_doc(file)
+    print(chat)
 
     return 'Ok'
 
