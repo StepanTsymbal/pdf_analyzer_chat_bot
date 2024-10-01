@@ -4,14 +4,11 @@ import tkinter as tk
 from tkinter.font import Font
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from uuid import uuid4
 import requests
 
 import utils.pdf_service as pdf_service
 import logging_services.seq_service as seq_service
 
-store = {}
-session_id = uuid4()
 history = []
 chat = {}
 selected_doc_id: int
@@ -22,7 +19,6 @@ BASE_URL = "http://127.0.0.1:8000/"
 class ChatApp:
     def __init__(self, root):
         try:
-            # TODO: move/copy to fast_api?
             seq_service.seq_logger_init()
 
             self.root = root
@@ -77,11 +73,9 @@ class ChatApp:
             logging.exception(f'ChatApp:: __init__ error: {ex}')
 
     def reset_session(self):
-        # TODO: add new reset logic
-        global store
-        store = {}
-        global session_id
-        session_id = uuid4()
+        global history, chat
+        history = []
+        chat = {}
 
         self.chat_display.config(state='normal')
         self.chat_display.delete('1.0', 'end')
