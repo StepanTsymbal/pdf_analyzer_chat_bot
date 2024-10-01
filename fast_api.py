@@ -1,3 +1,7 @@
+import asyncio
+import os
+
+from PyPDF2 import PdfReader
 from fastapi import FastAPI, UploadFile, Request, HTTPException
 from contextlib import asynccontextmanager
 import uvicorn
@@ -8,11 +12,15 @@ from helpers import fast_api_helper
 from logging_services import seq_service
 from models.chat import Chat
 
+UPLOAD_DIRECTORY = "temp_uploads"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     fast_api_helper.init()
     seq_service.seq_logger_init()
+    if not os.path.exists(UPLOAD_DIRECTORY):
+        os.makedirs(UPLOAD_DIRECTORY)
     yield
 
 
@@ -34,7 +42,15 @@ async def get_all_docs(request: Request):
 @limiter.limit("30/minute")
 async def index_doc(file: UploadFile, request: Request):
     try:
-        await fast_api_helper.index_doc(file)
+        # await fast_api_helper.index_doc(file)
+        # return 'Ok'
+
+        file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+
+        await asyncio.create_task(fast_api_helper.process_and_upload_to_pinecone(file_path, file.filename))
 
         return 'Ok'
     except Exception:

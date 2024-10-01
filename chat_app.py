@@ -1,10 +1,12 @@
 import logging
 import os
+import time
 import tkinter as tk
 from tkinter.font import Font
 from pathlib import Path
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 import requests
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
 import utils.pdf_service as pdf_service
 import logging_services.seq_service as seq_service
@@ -62,6 +64,9 @@ class ChatApp:
                                           font=Font(size=11, weight="bold"))
             self.reset_button.grid(row=7, column=0)
 
+            # self.progress_bar = ttk.Progressbar(self.root, orient="horizontal", length=300, mode="determinate")
+            # self.progress_bar.grid(row=8, column=0, columnspan=2)
+
             self.files = {}
 
             self.file_listbox.bind("<Double-1>", self.on_file_click)
@@ -114,25 +119,38 @@ class ChatApp:
     def upload_pdf(self):
         try:
             file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+            # if file_path:
+            #     pdf_text = pdf_service.process_pdf(file_path)
+            #     if pdf_text:
+            #         with open(file_path, 'rb') as file:
+            #             files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
+            #             response = requests.post(BASE_URL + 'docs/index', files=files)
             if file_path:
-                pdf_text = pdf_service.process_pdf(file_path)
-                if pdf_text:
-                    with open(file_path, 'rb') as file:
-                        files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
-                        response = requests.post(BASE_URL + 'docs/index', files=files)
+                self.chat_display.config(state='normal')
+                self.chat_display.insert(tk.END, 'PDF is being uploaded...Please wait\n')
+                self.chat_display.config(state='disabled')
 
-                    if response.status_code != 200:
-                        raise Exception(
-                            f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}'
-                        )
+                with open(file_path, 'rb') as f:
+                    encoder = MultipartEncoder({
+                        'file': (os.path.basename(file_path), f, 'application/pdf')
+                    })
+                    monitor = MultipartEncoderMonitor(encoder)
 
-                    self.chat_display.config(state='normal')
-                    self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
-                    self.chat_display.config(state='disabled')
+                    headers = {'Content-Type': monitor.content_type}
+                    response = requests.post(BASE_URL + 'docs/index', data=monitor, headers=headers)
 
-                    self.get_loaded_files()
+                if response.status_code != 200:
+                    raise Exception(
+                        f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}'
+                    )
 
-                    logging.info(f'ChatApp:: {Path(file_path).name} uploaded')
+                self.chat_display.config(state='normal')
+                self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
+                self.chat_display.config(state='disabled')
+
+                self.get_loaded_files()
+
+                logging.info(f'ChatApp:: {Path(file_path).name} uploaded')
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.exception(f'ChatApp:: upload_pdf error: {ex}')

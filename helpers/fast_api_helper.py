@@ -1,6 +1,8 @@
+import os
 import tempfile
 from uuid import uuid4
 
+from PyPDF2 import PdfReader
 from langchain_community.document_loaders import PyPDFLoader
 
 from database import postgresql_service, pinecone_service
@@ -36,6 +38,28 @@ async def index_doc(file):
     index = pinecone_service.create_index(index_name)
     vector_store = pinecone_service.vector_store_init(index=index)
     pinecone_service.upsert_documents(vector_store, documents)
+
+
+async def process_and_upload_to_pinecone(file_path: str, file_name: str):
+    CHUNK_SIZE = 1024 * 1024
+    index_name = str(uuid4())
+    postgresql_service.insert_documents_row(index_name, file_name)
+    index = pinecone_service.create_index(index_name)
+    vector_store = pinecone_service.vector_store_init(index=index)
+
+    # try:
+    with open(file_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        chunks = []
+
+        for page in pdf_reader.pages:
+            text = page.extract_text()
+            chunks.extend([text[i:i+CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)])
+
+        documents = pinecone_service.create_pinecone_documents(chunks)
+        pinecone_service.upsert_documents(vector_store, documents)
+
+    os.remove(file_path)
 
 
 def process_question(chat):
