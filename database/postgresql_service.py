@@ -1,13 +1,15 @@
+import os
+
 import psycopg2
 from datetime import datetime
 import logging
 
 
 # TODO: move to variables
-DB_USER = "postgres"
-DB_PASSWORD = "pass1234"
-DB_NAME = "chat_bot"
-DB_HOST = "localhost"
+DB_USER = os.getenv("DB_USER", default="postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", default="pass1234")
+DB_NAME = os.getenv("DB_NAME", default="chat_bot")
+DB_HOST = os.getenv("DB_HOST", default="localhost")
 
 
 def get_db_connection():

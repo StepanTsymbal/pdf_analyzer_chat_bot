@@ -1,14 +1,12 @@
 import logging
 import os
-import time
 import tkinter as tk
 from tkinter.font import Font
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-import utils.pdf_service as pdf_service
 import logging_services.seq_service as seq_service
 
 history = []

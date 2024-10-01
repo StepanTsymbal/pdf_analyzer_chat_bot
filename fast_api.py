@@ -36,7 +36,6 @@ async def get_all_docs(request: Request):
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
-# TODO: big files handling
 @app.post("/docs/index")
 @limiter.limit("30/minute")
 async def index_doc(file: UploadFile, request: Request):

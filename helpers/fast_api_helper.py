@@ -5,7 +5,7 @@ from uuid import uuid4
 from PyPDF2 import PdfReader
 from langchain_community.document_loaders import PyPDFLoader
 
-from database import postgresql_service, pinecone_service
+from database import pinecone_service, postgresql_service
 from utils import pdf_service
 from chats import chat_service_with_chat_history
 

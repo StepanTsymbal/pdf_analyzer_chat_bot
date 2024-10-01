@@ -1,11 +1,5 @@
-import utils.pdf_service as pdf_service
 import database.pinecone_service as pinecone_service
 import chats.chat_service_with_session_id as chat_service
-import database.postgresql_service as postgresql_service
-
-from uuid import uuid4
-import time
-
 
 # file_path = "drylab.pdf"
 
