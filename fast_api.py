@@ -1,7 +1,6 @@
 import asyncio
 import os
 
-from PyPDF2 import PdfReader
 from fastapi import FastAPI, UploadFile, Request, HTTPException
 from contextlib import asynccontextmanager
 import uvicorn

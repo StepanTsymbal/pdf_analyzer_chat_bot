@@ -64,9 +64,6 @@ class ChatApp:
                                           font=Font(size=11, weight="bold"))
             self.reset_button.grid(row=7, column=0)
 
-            # self.progress_bar = ttk.Progressbar(self.root, orient="horizontal", length=300, mode="determinate")
-            # self.progress_bar.grid(row=8, column=0, columnspan=2)
-
             self.files = {}
 
             self.file_listbox.bind("<Double-1>", self.on_file_click)
