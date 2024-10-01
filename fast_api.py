@@ -1,5 +1,6 @@
 import asyncio
 import os
+import logging
 
 from fastapi import FastAPI, UploadFile, Request, HTTPException
 from contextlib import asynccontextmanager
@@ -32,7 +33,8 @@ limiter = Limiter(key_func=get_remote_address)
 async def get_all_docs(request: Request):
     try:
         return fast_api_helper.get_all_documents()
-    except Exception:
+    except Exception as ex:
+        logging.exception(f'ChatApp:: __init__ error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
@@ -51,7 +53,8 @@ async def index_doc(file: UploadFile, request: Request):
         await asyncio.create_task(fast_api_helper.process_and_upload_to_pinecone(file_path, file.filename))
 
         return 'Ok'
-    except Exception:
+    except Exception as ex:
+        logging.exception(f'ChatApp:: __init__ error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
@@ -62,7 +65,8 @@ async def chat(chat: Chat, request: Request):
         response = fast_api_helper.process_question(chat)
 
         return response['answer']
-    except Exception:
+    except Exception as ex:
+        logging.exception(f'ChatApp:: __init__ error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
