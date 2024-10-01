@@ -8,11 +8,8 @@ from uuid import uuid4
 import requests
 
 import utils.pdf_service as pdf_service
-# import helpers.chat_app_helper as chat_app_helper
 import logging_services.seq_service as seq_service
-# import helpers.fast_api_helper as fast_api_helper
 
-# qa = None
 store = {}
 session_id = uuid4()
 history = []
@@ -102,34 +99,18 @@ class ChatApp:
                 global chat, history
                 chat["DocId"] = int(selected_doc_id)
                 chat["Question"] = message
-                # global history
                 chat["History"] = history
 
-                # print('CHAT chat_app:', chat)
-                # response = requests.post(BASE_URL + 'docs/chat', json=chat)
-                # fast_api_helper.process_question(chat)
-
-                # chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
-
-                # response = qa.invoke(
-                #     {"input": message},
-                #     config={
-                #         "configurable": {"session_id": session_id, "store": store}
-                #     },
-                # )['answer']
                 response = requests.post(BASE_URL + "docs/chat", json=chat)
 
                 if response.status_code != 200:
                     raise Exception(
                         f'ChatApp:: chat error: {response.text}.\nStatus code: {response.status_code}')
 
-                # global history
-                history.append({"Question": message, "Answer": response.json()['answer']})
-
-                # chat_app_helper.save_chat_message_to_db(response, True, selected_doc_id, session_id)
+                history.append({"Question": message, "Answer": response.json()})
 
                 self.chat_display.config(state='normal')
-                self.chat_display.insert(tk.END, f"\t\t\tBot: {response.json()['answer']}\n")
+                self.chat_display.insert(tk.END, f"\t\t\tBot: {response.json()}\n")
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
         except Exception as ex:
@@ -185,10 +166,6 @@ class ChatApp:
 
                 global selected_doc_id
                 selected_doc_id = text.split(": ")[1]
-
-                # TODO: move/duplicate to fast_api?
-                # global qa
-                # qa = chat_app_helper.init_qa(selected_doc_id)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.exception(f'ChatApp:: on_file_click error: {ex}')

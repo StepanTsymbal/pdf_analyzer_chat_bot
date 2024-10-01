@@ -39,7 +39,6 @@ async def index_doc(file):
 
 
 def process_question(chat):
-    # print(chat.Question)
     index_name = postgresql_service.get_document_by_id(chat.DocId)[1]
     index = pinecone_service.create_index(index_name)
     vector_store = pinecone_service.vector_store_init(index=index)
@@ -53,7 +52,5 @@ def process_question(chat):
     response = qa.invoke({"input": question, "chat_history": chat_history})
 
     postgresql_service.insert_chat_history_row(response['answer'], False, chat.DocId, '-')
-
-    # print('response:', response)
 
     return response

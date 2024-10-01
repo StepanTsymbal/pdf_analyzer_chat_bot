@@ -39,11 +39,9 @@ async def index_doc(file: UploadFile, request: Request):
 @app.post("/docs/chat")
 @limiter.limit("30/minute")
 async def chat(chat: Chat, request: Request):
-    # await fast_api_helper.index_doc(file)
-    print('CHAT fast_api:', chat)
     response = fast_api_helper.process_question(chat)
 
-    return response
+    return response['answer']
 
 
 if __name__ == "__main__":
