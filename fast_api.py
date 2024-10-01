@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, Request
+from fastapi import FastAPI, UploadFile, Request, HTTPException
 from contextlib import asynccontextmanager
 import uvicorn
 from slowapi import Limiter
@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     seq_service.seq_logger_init()
     yield
 
-# TODO: error handling
+
 app = FastAPI(lifespan=lifespan)
 limiter = Limiter(key_func=get_remote_address)
 
@@ -23,24 +23,33 @@ limiter = Limiter(key_func=get_remote_address)
 @app.get("/docs/")
 @limiter.limit("60/minute")
 async def get_all_docs(request: Request):
-    return fast_api_helper.get_all_documents()
+    try:
+        return fast_api_helper.get_all_documents()
+    except Exception:
+        raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
 # TODO: big files handling
 @app.post("/docs/index")
 @limiter.limit("30/minute")
 async def index_doc(file: UploadFile, request: Request):
-    await fast_api_helper.index_doc(file)
+    try:
+        await fast_api_helper.index_doc(file)
 
-    return 'Ok'
+        return 'Ok'
+    except Exception:
+        raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
 @app.post("/docs/chat")
 @limiter.limit("30/minute")
 async def chat(chat: Chat, request: Request):
-    response = fast_api_helper.process_question(chat)
+    try:
+        response = fast_api_helper.process_question(chat)
 
-    return response['answer']
+        return response['answer']
+    except Exception:
+        raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
 if __name__ == "__main__":
