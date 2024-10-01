@@ -42,8 +42,23 @@ def get_qa_with_chat_history(vector_store, model=MODEL):
     return rag_chain
 
 
-def chat_history_appendix(question, answer):
-    return [HumanMessage(content=question), AIMessage(content=answer)]
+# def chat_history_appendix(question, answer):
+#     return [HumanMessage(content=question), AIMessage(content=answer)]
+
+
+def get_ai_history(history):
+    ai_history = []
+    # his = [[HumanMessage(content=row['Question']), AIMessage(content=row['Answer'])] for row in history for item in row]
+    # print(his)
+    for row in history:
+        # question = row['Question']
+        # answer = row['Answer']
+        ai_history.extend([
+            HumanMessage(content=row.Question),
+            AIMessage(content=row.Answer)
+        ])
+
+    return ai_history
 
 
 # index_name = '8c0ef590-df3f-4929-b08f-d8f619f09dc5'
@@ -73,16 +88,16 @@ def chat_history_appendix(question, answer):
 
 
 # hist = []
-# hist.append({"q": "q1", "a": "a1"})
-# hist.append({"q": "q1", "a": "a1"})
-# hist.append({"q": "q2", "a": "a2"})
+# hist.append({"Question": "q1", "Answer": "a1"})
+# hist.append({"Question": "q1", "Answer": "a1"})
+# hist.append({"Question": "q2", "Answer": "a2"})
 #
 # chat = {}
-# chat['DocId'] = 12
-# chat['Question'] = '??????'
 # chat['History'] = hist
 # print(chat)
 #
 # chat['DocId'] = 21
 # chat['Question'] = '!!!!!!'
 # print(chat)
+
+# history2 = get_ai_history(chat['History'])

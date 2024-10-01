@@ -39,27 +39,21 @@ async def index_doc(file):
 
 
 def process_question(chat):
-    # print('history:', chat['History'])
-    #
-    # chat_history = []
-    # chat_history_ai = []
-    #
-    # for item in chat['History']:
-    #     q = item['Question']
-    #     a = item['Answer']
-    #     print('Question:', q)
-    #     print('Answer:', a)
-    #
-    #     chat_history.extend([q, a])
-    #     chat_history_ai.extend(chat_service_with_chat_history.chat_history_appendix(q, a))
-    #
-    # print('chat_history:', chat_history)
-    # print('chat_history_ai:', chat_history_ai)
-    history = [
-        chat_service_with_chat_history.chat_history_appendix(
-            item['Question'], item['Answer']
-        )
-        for item in chat['History']
-    ]
+    # print(chat.Question)
+    index_name = postgresql_service.get_document_by_id(chat.DocId)[1]
+    index = pinecone_service.create_index(index_name)
+    vector_store = pinecone_service.vector_store_init(index=index)
+    chat_history = chat_service_with_chat_history.get_ai_history(chat.History)
+    question = chat.Question
 
-    print('history:', history)
+    postgresql_service.insert_chat_history_row(question, True, chat.DocId, '-')
+
+    qa = chat_service_with_chat_history.get_qa_with_chat_history(vector_store)
+
+    response = qa.invoke({"input": question, "chat_history": chat_history})
+
+    postgresql_service.insert_chat_history_row(response['answer'], False, chat.DocId, '-')
+
+    # print('response:', response)
+
+    return response
