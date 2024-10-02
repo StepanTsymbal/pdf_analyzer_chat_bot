@@ -4,16 +4,13 @@ import tkinter as tk
 from tkinter.font import Font
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from uuid import uuid4
 import requests
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 
-import utils.pdf_service as pdf_service
-import helpers.chat_app_helper as chat_app_helper
 import logging_services.seq_service as seq_service
 
-qa = None
-store = {}
-session_id = uuid4()
+history = []
+chat = {}
 selected_doc_id: int
 
 BASE_URL = "http://127.0.0.1:8000/"
@@ -76,10 +73,9 @@ class ChatApp:
             logging.exception(f'ChatApp:: __init__ error: {ex}')
 
     def reset_session(self):
-        global store
-        store = {}
-        global session_id
-        session_id = uuid4()
+        global history, chat
+        history = []
+        chat = {}
 
         self.chat_display.config(state='normal')
         self.chat_display.delete('1.0', 'end')
@@ -94,21 +90,21 @@ class ChatApp:
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
 
-                # TODO: move to fast_api?
-                chat_app_helper.save_chat_message_to_db(message, False, selected_doc_id, session_id)
+                global chat, history
+                chat["DocId"] = int(selected_doc_id)
+                chat["Question"] = message
+                chat["History"] = history
 
-                response = qa.invoke(
-                    {"input": message},
-                    config={
-                        "configurable": {"session_id": session_id, "store": store}
-                    },
-                )['answer']
+                response = requests.post(BASE_URL + "docs/chat", json=chat)
 
-                # TODO: move to fast_api?
-                chat_app_helper.save_chat_message_to_db(response, True, selected_doc_id, session_id)
+                if response.status_code != 200:
+                    raise Exception(
+                        f'ChatApp:: chat error: {response.text}.\nStatus code: {response.status_code}')
+
+                history.append({"Question": message, "Answer": response.json()})
 
                 self.chat_display.config(state='normal')
-                self.chat_display.insert(tk.END, f"\t\t\tBot: {response}\n")
+                self.chat_display.insert(tk.END, f"\t\t\tBot: {response.json()}\n")
                 self.chat_display.config(state='disabled')
                 self.message_input.delete(0, tk.END)
         except Exception as ex:
@@ -118,25 +114,38 @@ class ChatApp:
     def upload_pdf(self):
         try:
             file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+            # if file_path:
+            #     pdf_text = pdf_service.process_pdf(file_path)
+            #     if pdf_text:
+            #         with open(file_path, 'rb') as file:
+            #             files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
+            #             response = requests.post(BASE_URL + 'docs/index', files=files)
             if file_path:
-                pdf_text = pdf_service.process_pdf(file_path)
-                if pdf_text:
-                    with open(file_path, 'rb') as file:
-                        files = {'file': (os.path.basename(file_path), file, 'application/octet-stream')}
-                        response = requests.post(BASE_URL + 'docs/index/', files=files)
+                self.chat_display.config(state='normal')
+                self.chat_display.insert(tk.END, 'PDF is being uploaded...Please wait\n')
+                self.chat_display.config(state='disabled')
 
-                    if response.status_code != 200:
-                        raise Exception(
-                            f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}'
-                        )
+                with open(file_path, 'rb') as f:
+                    encoder = MultipartEncoder({
+                        'file': (os.path.basename(file_path), f, 'application/pdf')
+                    })
+                    monitor = MultipartEncoderMonitor(encoder)
 
-                    self.chat_display.config(state='normal')
-                    self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
-                    self.chat_display.config(state='disabled')
+                    headers = {'Content-Type': monitor.content_type}
+                    response = requests.post(BASE_URL + 'docs/index', data=monitor, headers=headers)
 
-                    self.get_loaded_files()
+                if response.status_code != 200:
+                    raise Exception(
+                        f'ChatApp:: get_loaded_files error: {response.text}.\nStatus code: {response.status_code}'
+                    )
 
-                    logging.info(f'ChatApp:: {Path(file_path).name} uploaded')
+                self.chat_display.config(state='normal')
+                self.chat_display.insert(tk.END, 'PDF has being uploaded...\n')
+                self.chat_display.config(state='disabled')
+
+                self.get_loaded_files()
+
+                logging.info(f'ChatApp:: {Path(file_path).name} uploaded')
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.exception(f'ChatApp:: upload_pdf error: {ex}')
@@ -164,10 +173,6 @@ class ChatApp:
 
                 global selected_doc_id
                 selected_doc_id = text.split(": ")[1]
-
-                # TODO: move/duplicate to fast_api?
-                global qa
-                qa = chat_app_helper.init_qa(selected_doc_id)
         except Exception as ex:
             messagebox.showerror('Error', 'Smth went wrong! Check logs for details')
             logging.exception(f'ChatApp:: on_file_click error: {ex}')

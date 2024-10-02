@@ -1,9 +1,11 @@
+import os
 import tempfile
 from uuid import uuid4
 
+from PyPDF2 import PdfReader
 from langchain_community.document_loaders import PyPDFLoader
 
-from database import postgresql_service, pinecone_service
+from database import pinecone_service, postgresql_service
 from utils import pdf_service
 from chats import chat_service_with_chat_history
 
@@ -38,28 +40,41 @@ async def index_doc(file):
     pinecone_service.upsert_documents(vector_store, documents)
 
 
-def process_question(chat):
-    # print('history:', chat['History'])
-    #
-    # chat_history = []
-    # chat_history_ai = []
-    #
-    # for item in chat['History']:
-    #     q = item['Question']
-    #     a = item['Answer']
-    #     print('Question:', q)
-    #     print('Answer:', a)
-    #
-    #     chat_history.extend([q, a])
-    #     chat_history_ai.extend(chat_service_with_chat_history.chat_history_appendix(q, a))
-    #
-    # print('chat_history:', chat_history)
-    # print('chat_history_ai:', chat_history_ai)
-    history = [
-        chat_service_with_chat_history.chat_history_appendix(
-            item['Question'], item['Answer']
-        )
-        for item in chat['History']
-    ]
+async def process_and_upload_to_pinecone(file_path: str, file_name: str):
+    CHUNK_SIZE = 1024 * 1024
+    index_name = str(uuid4())
+    postgresql_service.insert_documents_row(index_name, file_name)
+    index = pinecone_service.create_index(index_name)
+    vector_store = pinecone_service.vector_store_init(index=index)
 
-    print('history:', history)
+    # try:
+    with open(file_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        chunks = []
+
+        for page in pdf_reader.pages:
+            text = page.extract_text()
+            chunks.extend([text[i:i+CHUNK_SIZE] for i in range(0, len(text), CHUNK_SIZE)])
+
+        documents = pinecone_service.create_pinecone_documents(chunks)
+        pinecone_service.upsert_documents(vector_store, documents)
+
+    os.remove(file_path)
+
+
+def process_question(chat):
+    index_name = postgresql_service.get_document_by_id(chat.DocId)[1]
+    index = pinecone_service.create_index(index_name)
+    vector_store = pinecone_service.vector_store_init(index=index)
+    chat_history = chat_service_with_chat_history.get_ai_history(chat.History)
+    question = chat.Question
+
+    postgresql_service.insert_chat_history_row(question, True, chat.DocId, '-')
+
+    qa = chat_service_with_chat_history.get_qa_with_chat_history(vector_store)
+
+    response = qa.invoke({"input": question, "chat_history": chat_history})
+
+    postgresql_service.insert_chat_history_row(response['answer'], False, chat.DocId, '-')
+
+    return response

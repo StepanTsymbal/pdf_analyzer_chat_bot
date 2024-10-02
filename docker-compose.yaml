@@ -1,0 +1,83 @@
+#version: '3.8'
+networks:
+  postgres:
+#    driver: bridge
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    environment:
+      OPENAI_API_KEY:
+      PINECONE_API_KEY:
+      DATABASE_URL: postgres://user:password@db:5432/mydatabase
+      SEQ_URL: http://seq:5341
+#      DATABASE_URL: postgresql://user:password@db:5432/mydatabase
+#      POSTGRES_DB: mydatabase
+#      POSTGRES_USER: user
+#      POSTGRES_PASSWORD: password
+#      DB_USER: user-name
+#      DB_PASSWORD: strong-password
+#      DB_NAME: postgres
+#      DB_HOST: localhost
+#      DB_HOST: 0.0.0.0
+    ports:
+      - "8000:8000"  # Expose your application port
+    depends_on:
+      - db
+#      - seq
+    networks:
+      - postgres
+    links:
+      - db
+
+  db:
+#    image: postgres:13
+    image: postgres:13
+#    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+#      POSTGRES_USER: user
+#      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: mydatabase
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    depends_on:
+      - seq
+#    volumes:
+#      - db_data:/var/lib/postgresql/data
+    networks:
+      - postgres
+
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - "5341:80"  # Expose Seq on port 5341
+      - "5342:5342"
+    environment:
+      ACCEPT_EULA: Y
+    networks:
+      - postgres
+#      SEQ_API_KEY: 'your-api-key'  # Optional: use if you have an API key
+
+#  pgadmin:
+#    image: dpage/pgadmin4
+#    container_name: pgadmin4_container
+#    restart: always
+#    ports:
+#      - "8888:80"
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
+#      PGADMIN_DEFAULT_PASSWORD: strong-password
+#    volumes:
+#      - pgadmin-data:/var/lib/pgadmin
+#    networks:
+#      - postgres
+
+volumes:
+  db_data:
+#  pgadmin-data:

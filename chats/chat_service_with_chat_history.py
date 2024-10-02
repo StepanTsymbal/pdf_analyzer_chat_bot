@@ -7,7 +7,6 @@ from langchain_openai import ChatOpenAI
 
 from templates.templates import contextualize_q_system_prompt_with_history as contextualize_q_system_prompt
 from templates.templates import system_prompt_with_history as system_prompt
-# import database.pinecone_service as pinecone_service
 
 MODEL = "gpt-3.5-turbo"
 
@@ -42,47 +41,12 @@ def get_qa_with_chat_history(vector_store, model=MODEL):
     return rag_chain
 
 
-def chat_history_appendix(question, answer):
-    return [HumanMessage(content=question), AIMessage(content=answer)]
+def get_ai_history(history):
+    ai_history = []
+    for row in history:
+        ai_history.extend([
+            HumanMessage(content=row.Question),
+            AIMessage(content=row.Answer)
+        ])
 
-
-# index_name = '8c0ef590-df3f-4929-b08f-d8f619f09dc5'
-# index = pinecone_service.create_index(index_name)
-# vector_store = pinecone_service.vector_store_init(index=index)
-#
-# rag_chain = get_qa_with_chat_history(vector_store)
-#
-# chat_history = []
-#
-# question = "list new owners"
-# ai_msg_1 = rag_chain.invoke({"input": question, "chat_history": chat_history})
-# # chat_history.extend(
-# #     [
-# #         HumanMessage(content=question),
-# #         AIMessage(content=ai_msg_1["answer"]),
-# #     ]
-# # )
-# chat_history.extend(chat_history_appendix(question, ai_msg_1["answer"]))
-#
-# print('chat history:', chat_history)
-#
-# second_question = "count them"
-# ai_msg_2 = rag_chain.invoke({"input": second_question, "chat_history": chat_history})
-#
-# print(ai_msg_2["answer"])
-
-
-# hist = []
-# hist.append({"q": "q1", "a": "a1"})
-# hist.append({"q": "q1", "a": "a1"})
-# hist.append({"q": "q2", "a": "a2"})
-#
-# chat = {}
-# chat['DocId'] = 12
-# chat['Question'] = '??????'
-# chat['History'] = hist
-# print(chat)
-#
-# chat['DocId'] = 21
-# chat['Question'] = '!!!!!!'
-# print(chat)
+    return ai_history
