@@ -1,8 +1,9 @@
-import asyncio
-import os
+# import asyncio
 import logging
+import os
+from datetime import datetime
 
-from fastapi import FastAPI, UploadFile, Request, HTTPException
+from fastapi import FastAPI, UploadFile, Request, HTTPException, BackgroundTasks
 from contextlib import asynccontextmanager
 import uvicorn
 from slowapi import Limiter
@@ -34,27 +35,43 @@ async def get_all_docs(request: Request):
     try:
         return fast_api_helper.get_all_documents()
     except Exception as ex:
-        logging.exception(f'ChatApp:: __init__ error: {ex}')
+        logging.exception(f'fast_api.py:: docs error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
+
+
+async def process_and_upload_to_pinecone(file_content, filename, file_path):
+    with open(file_path, "wb") as buffer:
+        # content = await file.read()
+        buffer.write(file_content)
+
+    await fast_api_helper.process_and_upload_to_pinecone(file_path, filename)
 
 
 @app.post("/docs/index")
 @limiter.limit("30/minute")
-async def index_doc(file: UploadFile, request: Request):
+async def index_doc(file: UploadFile, request: Request, background_tasks: BackgroundTasks):
     try:
         # await fast_api_helper.index_doc(file)
         # return 'Ok'
 
+        file_content = await file.read()
+
         file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
+        # with open(file_path, "wb") as buffer:
+        #     content = await file.read()
+        #     buffer.write(content)
 
-        await asyncio.create_task(fast_api_helper.process_and_upload_to_pinecone(file_path, file.filename))
+        # await asyncio.create_task(fast_api_helper.process_and_upload_to_pinecone(file_path, file.filename))
+        background_tasks.add_task(
+            process_and_upload_to_pinecone,
+            file_content,
+            file.filename,
+            file_path
+        )
 
-        return 'Ok'
+        return 'Processing... ' + str(datetime.now())
     except Exception as ex:
-        logging.exception(f'ChatApp:: __init__ error: {ex}')
+        logging.exception(f'fast_api.py:: docs/index error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
@@ -66,9 +83,9 @@ async def chat(chat: Chat, request: Request):
 
         return response['answer']
     except Exception as ex:
-        logging.exception(f'ChatApp:: __init__ error: {ex}')
+        logging.exception(f'fast_api.py:: docs/chat error: {ex}')
         raise HTTPException(status_code=500, detail='Smth went wrong! Check logs')
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

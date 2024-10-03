@@ -6,18 +6,21 @@ import logging
 
 
 # TODO: move to variables
-DB_USER = os.getenv("DB_USER", default="postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", default="pass1234")
-DB_NAME = os.getenv("DB_NAME", default="chat_bot")
-DB_HOST = os.getenv("DB_HOST", default="localhost")
+# DB_USER = os.getenv("DB_USER", default="postgres")
+# DB_PASSWORD = os.getenv("DB_PASSWORD", default="pass1234")
+# DB_NAME = os.getenv("DB_NAME", default="chat_bot")
+# DB_HOST = os.getenv("DB_HOST", default="localhost")
 
 
 def get_db_connection():
-    connection = psycopg2.connect(user=DB_USER,
-                                  password=DB_PASSWORD,
-                                  host=DB_HOST,
-                                  # port="5432",
-                                  database=DB_NAME)
+    # connection = psycopg2.connect(user=DB_USER,
+    #                               password=DB_PASSWORD,
+    #                               host=DB_HOST,
+    #                               # port="5432",
+    #                               database=DB_NAME)
+
+    DATABASE_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:pass1234@localhost:5432/chat_bot')
+    connection = psycopg2.connect(DATABASE_URL)
 
     logging.info('postgres_service:: connection initialized')
 
@@ -31,7 +34,8 @@ def create_documents_table():
     CREATE TABLE IF NOT EXISTS documents
     (id SERIAL PRIMARY KEY NOT NULL,
     uuid TEXT NOT NULL,
-    name TEXT NOT NULL)
+    name TEXT NOT NULL,
+    created_date TIMESTAMP NOT NULL)
     '''
 
     with connection.cursor() as cursor:
@@ -66,12 +70,12 @@ def insert_documents_row(uuid, name):
     connection = get_db_connection()
 
     insert_query = """
-        INSERT INTO documents (uuid, name) 
-        VALUES (%s, %s)
+        INSERT INTO documents (uuid, name, created_date) 
+        VALUES (%s, %s, %s)
         returning id
         """
 
-    data = (str(uuid), name)
+    data = (str(uuid), name, str(datetime.now()))
 
     with connection.cursor() as cursor:
         cursor.execute(insert_query, data)
