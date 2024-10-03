@@ -43,7 +43,7 @@ async def index_doc(file):
 async def process_and_upload_to_pinecone(file_path: str, file_name: str):
     CHUNK_SIZE = 1024 * 1024
     index_name = str(uuid4())
-    postgresql_service.insert_documents_row(index_name, file_name)
+    # postgresql_service.insert_documents_row(index_name, file_name)
     index = pinecone_service.create_index(index_name)
     vector_store = pinecone_service.vector_store_init(index=index)
 
@@ -58,6 +58,8 @@ async def process_and_upload_to_pinecone(file_path: str, file_name: str):
 
         documents = pinecone_service.create_pinecone_documents(chunks)
         pinecone_service.upsert_documents(vector_store, documents)
+
+    postgresql_service.insert_documents_row(index_name, file_name)
 
     os.remove(file_path)
 

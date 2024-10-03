@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from uuid import uuid4
 from pinecone import Pinecone, ServerlessSpec
 from openai import OpenAI
@@ -38,7 +39,12 @@ def create_index(index_name, dimension=1536, metric="cosine", cloud='aws', regio
 def create_pinecone_documents(texts):
     documents = []
     for text in texts:
-        documents.append(Document(page_content=text))
+        documents.append(Document(
+            page_content=text,
+            metadata={
+                "added_at": datetime.now()
+            }
+        ))
 
     return documents
 

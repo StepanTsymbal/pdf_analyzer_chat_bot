@@ -34,6 +34,7 @@ def create_documents_table():
     CREATE TABLE IF NOT EXISTS documents
     (id SERIAL PRIMARY KEY NOT NULL,
     uuid TEXT NOT NULL,
+    created_time TIMESTAMP NOT NULL,
     name TEXT NOT NULL)
     '''
 
@@ -69,12 +70,12 @@ def insert_documents_row(uuid, name):
     connection = get_db_connection()
 
     insert_query = """
-        INSERT INTO documents (uuid, name) 
-        VALUES (%s, %s)
+        INSERT INTO documents (uuid, name, created_date) 
+        VALUES (%s, %s, %s)
         returning id
         """
 
-    data = (str(uuid), name)
+    data = (str(uuid), name, str(datetime.now()))
 
     with connection.cursor() as cursor:
         cursor.execute(insert_query, data)
