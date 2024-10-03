@@ -42,7 +42,7 @@ def create_pinecone_documents(texts):
         documents.append(Document(
             page_content=text,
             metadata={
-                "added_at": datetime.now()
+                "added_at": str(datetime.now())
             }
         ))
 

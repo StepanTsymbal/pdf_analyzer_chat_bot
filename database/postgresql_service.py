@@ -34,8 +34,8 @@ def create_documents_table():
     CREATE TABLE IF NOT EXISTS documents
     (id SERIAL PRIMARY KEY NOT NULL,
     uuid TEXT NOT NULL,
-    created_date TIMESTAMP NOT NULL,
-    name TEXT NOT NULL)
+    name TEXT NOT NULL,
+    created_date TIMESTAMP NOT NULL)
     '''
 
     with connection.cursor() as cursor:
