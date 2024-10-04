@@ -5,7 +5,6 @@ from datetime import datetime
 import logging
 
 
-# TODO: move to variables
 # DB_USER = os.getenv("DB_USER", default="postgres")
 # DB_PASSWORD = os.getenv("DB_PASSWORD", default="pass1234")
 # DB_NAME = os.getenv("DB_NAME", default="chat_bot")
@@ -107,7 +106,7 @@ def insert_chat_history_row(text, is_question, document_id, session_id):
 def get_all_documents():
     connection = get_db_connection()
 
-    get_query = 'SELECT * FROM documents'
+    get_query = 'SELECT * FROM documents ORDER BY id'
 
     with connection.cursor() as cursor:
         cursor.execute(get_query)
