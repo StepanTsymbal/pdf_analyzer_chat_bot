@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .docs-section, .chat-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .upload-section {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .chat-history {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .question {
+            background-color: #e3f2fd;
+            margin-left: 20px;
+        }
+
+        .answer {
+            background-color: #f5f5f5;
+            margin-right: 20px;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1976d2;
+        }
+
+        .doc-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+
+        #uploadStatus {
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-section">
+        <h2>Upload PDF Document</h2>
+        <input type="file" id="pdfFile" accept=".pdf" style="margin-right: 10px;">
+        <button onclick="uploadPDF()">Upload</button>
+        <div id="uploadStatus"></div>
+    </div>
+
+    <div class="container">
+        <div class="docs-section">
+            <h2>Documents List</h2>
+            <div id="docsList"></div>
+        </div>
+
+        <div class="chat-section">
+            <h2>Chat</h2>
+            <div class="chat-history" id="chatHistory"></div>
+            <div class="chat-input">
+                <input type="text" id="questionInput" placeholder="Type your question here..." onkeypress="handleEnter(event)">
+                <button onclick="sendQuestion()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add chat history state management
+        let chatHistory = [];
+        let currentDocId = null;
+
+        // Load documents on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDocs();
+        });
+
+        // Function to load documents and set initial docId
+        async function loadDocs() {
+            try {
+                const response = await fetch('/docs/');
+                const docs = await response.json();
+
+                // Set the current docId to the first document's ID
+                if (docs.length > 0) {
+                    currentDocId = docs[0].id;
+                }
+
+                const docsListElement = document.getElementById('docsList');
+
+                // Add click event listener to each document item
+                docsListElement.addEventListener('click', (event) => {
+                    const docItem = event.target.closest('.doc-item'); // Get the clicked item
+                    if (docItem) {
+                        currentDocId = docItem.getAttribute('data-doc-id'); // Update currentDocId
+                        console.log(`Current Doc ID updated to: ${currentDocId}`);
+
+                        const allItems = docsListElement.querySelectorAll('.doc-item div');
+                        allItems.forEach(item => {
+                            item.style.fontWeight = 'normal'; // Set font weight to normal
+                        });
+
+                        // Set bold style for the selected item
+                        docItem.querySelector('div').style.fontWeight = 'bold';
+                    }
+                });
+
+                docsListElement.innerHTML = docs.map(doc => `
+                    <div class="doc-item" data-doc-id="${doc.id}">
+                        <div>${doc.id} :: ${doc.name}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading docs:', error);
+            }
+        }
+
+        // Function to send question
+        async function sendQuestion() {
+            const questionInput = document.getElementById('questionInput');
+            const question = questionInput.value.trim();
+
+            if (!question || !currentDocId) return;
+
+            // Disable input during processing
+            questionInput.disabled = true;
+
+            try {
+                // Prepare the request payload
+                const payload = {
+                    DocId: currentDocId,
+                    Question: question,
+                    History: chatHistory.map(chat => ({
+                        Question: chat.question,
+                        Answer: chat.answer
+                    }))
+                };
+
+                console.log('payload', payload)
+                console.log('JSON.stringify(payload)', JSON.stringify(payload))
+
+                // Send the request
+                const response = await fetch('/docs/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get response');
+                }
+
+                const data = await response.json();
+                console.log('data', data)
+
+                // Add to visual chat history
+                addMessageToChat('question', question);
+                addMessageToChat('answer', data);
+
+                // Add to chat history state
+                chatHistory.push({
+                    question: question,
+                    answer: data
+                });
+
+                // Clear input
+                questionInput.value = '';
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessageToChat('answer', 'Error: Failed to get response');
+            } finally {
+                questionInput.disabled = false;
+                questionInput.focus();
+            }
+        }
+
+        // Function to add message to chat history
+        function addMessageToChat(type, message) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+
+            // Add timestamp
+            const timeSpan = document.createElement('small');
+            timeSpan.style.display = 'block';
+            timeSpan.style.color = '#666';
+            timeSpan.textContent = new Date().toLocaleTimeString();
+            messageDiv.appendChild(timeSpan);
+
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // Upload PDF function remains the same
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdfFile');
+            const statusDiv = document.getElementById('uploadStatus');
+
+            if (!fileInput.files[0]) {
+                statusDiv.textContent = 'Please select a file first';
+                return;
+            }
+
+            if (!fileInput.files[0].type.includes('pdf')) {
+                statusDiv.textContent = 'Please select a PDF file';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                statusDiv.textContent = 'Uploading...';
+                document.querySelector('.upload-section').classList.add('loading');
+
+                const response = await fetch('/docs/index', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Upload failed');
+
+                statusDiv.textContent = 'Upload successful! Index is being updated. Please wait...';
+                fileInput.value = '';
+                await loadDocs(); // Reload the documents list
+                statusDiv.textContent = 'Index is up-to-date!';
+            } catch (error) {
+                statusDiv.textContent = `Error: ${error.message}`;
+                console.error('Upload error:', error);
+            } finally {
+                document.querySelector('.upload-section').classList.remove('loading');
+            }
+        }
+
+        // Handle Enter key in chat input
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendQuestion();
+            }
+        }
+    </script>
+</body>
+</html>
