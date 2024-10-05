@@ -10,3 +10,10 @@
 
 ## localhost:8000/home/ html client
 ![HTML client](https://github.com/StepanTsymbal/pdf_analyzer_chat_bot/blob/master/html_client.png)
+
+
+### to run FastAPI part:
+`python fast_api.py`
+
+### to run GUI part:
+`python fast_api.py`
