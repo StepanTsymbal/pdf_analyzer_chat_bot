@@ -5,6 +5,7 @@ import shutil
 import uuid
 
 from fastapi import FastAPI, File, UploadFile, Request, HTTPException, BackgroundTasks
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import uvicorn
 from slowapi import Limiter
@@ -21,8 +22,7 @@ UPLOAD_DIRECTORY = "temp_uploads"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     fast_api_helper.init()
-    # with this line uncommented, API works slower??
-    # seq_service.seq_logger_init()
+    seq_service.seq_logger_init()
     if not os.path.exists(UPLOAD_DIRECTORY):
         os.makedirs(UPLOAD_DIRECTORY)
     yield
@@ -37,6 +37,12 @@ upload_status = {}
 class UploadStart(BaseModel):
     filename: str
     total_size: int
+
+
+@app.get("/home/")
+@limiter.limit("60/minute")
+async def get_all_docs(request: Request):
+    return FileResponse("home.html")
 
 
 @app.get("/docs/")
