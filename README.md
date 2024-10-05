@@ -16,4 +16,12 @@
 `python fast_api.py`
 
 ### to run GUI part:
-`python fast_api.py`
+`python chat_app.py`
+
+
+### set
+`OPENAI_API_KEY` env variable for OpenAI key
+`PINECONE_API_KEY` env variable for Pinecone key
+
+### update
+'docker-compose.yaml' with your creds if needed
