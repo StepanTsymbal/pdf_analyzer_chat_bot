@@ -8,12 +8,13 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 import logging
 
+import constants.general_constants as constants
+
+
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
-MODEL = "text-embedding-ada-002"
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 client = OpenAI()
-
 
 def create_index(index_name, dimension=1536, metric="cosine", cloud='aws', region='us-east-1'):
     existing_indexes = [index_info["name"] for index_info in pc.list_indexes()]
@@ -56,7 +57,7 @@ def upsert_documents(vector_store, documents):
     logging.info('pinecone_service:: documents added to vector store')
 
 
-def vector_store_init(index, model=MODEL):
+def vector_store_init(index, model=constants.MODEL):
     embedding = OpenAIEmbeddings(model=model)
     vector_store = PineconeVectorStore(index=index, embedding=embedding)
 

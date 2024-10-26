@@ -1,5 +1,3 @@
-from templates.templates import contextualize_q_system_prompt as contextualize_q_system_prompt
-from templates.templates import qa_system_prompt as qa_system_prompt
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
@@ -10,10 +8,12 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.runnables import ConfigurableFieldSpec
 import logging
 
-MODEL = "gpt-3.5-turbo"
+from templates.templates import contextualize_q_system_prompt as contextualize_q_system_prompt
+from templates.templates import qa_system_prompt as qa_system_prompt
+import constants.general_constants as constants
 
 
-def get_qa_with_session_id(vector_store, model=MODEL):
+def get_qa_with_session_id(vector_store, model=constants.GPT_MODEL):
     llm = ChatOpenAI(model=model, temperature=0)
     retriever = vector_store.as_retriever()
 

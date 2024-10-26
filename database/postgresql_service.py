@@ -1,23 +1,10 @@
 import os
-
 import psycopg2
 from datetime import datetime
 import logging
 
 
-# DB_USER = os.getenv("DB_USER", default="postgres")
-# DB_PASSWORD = os.getenv("DB_PASSWORD", default="pass1234")
-# DB_NAME = os.getenv("DB_NAME", default="chat_bot")
-# DB_HOST = os.getenv("DB_HOST", default="localhost")
-
-
 def get_db_connection():
-    # connection = psycopg2.connect(user=DB_USER,
-    #                               password=DB_PASSWORD,
-    #                               host=DB_HOST,
-    #                               # port="5432",
-    #                               database=DB_NAME)
-
     DATABASE_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:pass1234@localhost:5432/chat_bot')
     connection = psycopg2.connect(DATABASE_URL)
 
