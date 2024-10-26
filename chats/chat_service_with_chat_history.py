@@ -7,11 +7,10 @@ from langchain_openai import ChatOpenAI
 
 from templates.templates import contextualize_q_system_prompt_with_history as contextualize_q_system_prompt
 from templates.templates import system_prompt_with_history as system_prompt
+import constants.general_constants as constants
 
-MODEL = "gpt-3.5-turbo"
 
-
-def get_qa_with_chat_history(vector_store, model=MODEL):
+def get_qa_with_chat_history(vector_store, model=constants.GPT_MODEL):
     llm = ChatOpenAI(model=model, temperature=0)
     retriever = vector_store.as_retriever()
 

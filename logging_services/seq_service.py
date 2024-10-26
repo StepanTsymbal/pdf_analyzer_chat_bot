@@ -1,7 +1,7 @@
 import logging
 import os
-
 import seqlog
+
 
 SERVER_URL = os.getenv("SEQ_URL", default="http://localhost:5341/")
 

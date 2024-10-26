@@ -12,5 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of your application code into the container
 COPY . .
 
-# Command to run your application (replace 'your_script.py' with your entry point)
+# Command to run your application
 CMD ["python", "fast_api.py"]
